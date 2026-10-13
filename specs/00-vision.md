@@ -100,7 +100,7 @@ quarantaine, ou signaler seulement) et la règle exacte. Appliquée dans
 | Identifiants | Code postal à 4 chiffres (zéro initial perdu) | Recomplété avec un zéro initial (CP français = 5 chiffres), tracé dans `correction_log` |
 | Identifiants | SIRET en notation scientifique | Reconverti en entier 14 chiffres si reconstituable sans perte ; sinon quarantaine motif `siret_illisible` |
 | Identifiants | Code produit en casse mixte | Normalisé en majuscules, tracé dans `correction_log` |
-| Catégories | Variantes de casse/orthographe (`Outillage` / `outillage` / `Outilage` / `OUTILLAGE`) | Normalisées via une table de correspondance explicite et documentée (mapping figé, pas de rapprochement flou automatique) |
+| Catégories | Variantes de casse/orthographe (`Hygiène` / `hygiene` / `Hygiene` / `HYGIENE`) sur la liste fixe du projet (cf. [01-generator.md](01-generator.md)) | Normalisées via une table de correspondance explicite et documentée (mapping figé, pas de rapprochement flou automatique) |
 | Contacts | Email sans `@` ou format invalide | **Jamais corrigé** : quarantaine motif `email_invalide` |
 | Contacts | Téléphone multi-formats, espaces/caractères invisibles | Normalisé au format `0X XX XX XX XX`, caractères invisibles supprimés, tracé dans `correction_log` |
 | Cohérence | Quantité négative ou nulle, prix à 0 | Quarantaine, motif `quantite_ou_prix_invalide` |

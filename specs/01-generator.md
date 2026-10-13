@@ -1,6 +1,6 @@
 # 01 — Générateur du fichier désordonné + vérité terrain
 
-**Statut : Approved**
+**Statut : Implemented**
 
 ## Objectif
 
@@ -19,16 +19,22 @@ types de régions/catégories de produits/segments de client.
 ## Schéma des données parfaites (avant injection de défauts)
 
 ### Clients
-`client_id` (entier, PK), `nom_entreprise`, `contact_nom`, `email`,
-`telephone`, `adresse`, `code_postal` (5 chiffres), `ville`, `region`,
-`siret` (14 chiffres), `segment` (`Grand Compte` / `PME` / `Artisan`),
-`date_creation` (date).
+`client_id` (entier, PK), `code_client` (ex. `CLI-0042`, même format que
+`rapport-commercial-auto`), `nom_entreprise`, `contact_nom`, `email`,
+`telephone`, `adresse`, `code_postal` (5 chiffres), `ville`, `region`
+(liste fixe, identique aux projets 1/2 : Île-de-France,
+Auvergne-Rhône-Alpes, Nouvelle-Aquitaine, Occitanie, Hauts-de-France, Grand
+Est), `siret` (14 chiffres), `segment` (liste fixe, identique au projet 2 :
+`grand_compte` / `pme` / `detaillant`), `date_creation` (date).
 
 ### Produits
-`produit_id` (entier, PK), `code_produit` (ex. `PRD-0042`), `nom_produit`,
-`categorie` (liste fixe : Outillage, Quincaillerie, Fournitures,
-Électricité, Plomberie — cohérente avec les projets 1/2), `prix_unitaire`
-(décimal > 0), `unite` (pièce, lot, boîte...), `fournisseur`.
+`produit_id` (entier, PK), `code_produit` (ex. `ART-0042`, même format que
+`rapport-commercial-auto`), `nom_produit` (style catalogue gros, ex. « Carton
+de gants nitrile », « Rouleau de film étirable » — cohérent avec les
+produits déjà utilisés dans les projets 1/2), `categorie` (liste fixe,
+identique au projet 2 : emballage, hygiene, boissons, alimentaire, papier,
+protection, entretien, textile), `prix_unitaire` (décimal > 0), `unite`
+(pièce, lot, carton, palette...), `fournisseur`.
 
 ### Commandes
 `commande_id` (entier, PK), `client_id` (FK), `produit_id` (FK), `quantite`
