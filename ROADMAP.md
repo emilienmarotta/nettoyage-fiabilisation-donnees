@@ -8,7 +8,7 @@ pour le workflow Git).
   (Postgres), `.env.example`, `.gitignore`, specs écrites et approuvées,
   charte de règles, seuils qualité, README initial. Spec :
   [00-vision.md](specs/00-vision.md).
-- [ ] **M1 — Générateur du fichier désordonné.** Données parfaites (Faker,
+- [x] **M1 — Générateur du fichier désordonné.** Données parfaites (Faker,
   graine fixe), injection des défauts du catalogue, fichier vérité terrain,
   classeur `clients_commandes_brut.xlsx`. Spec :
   [01-generator.md](specs/01-generator.md).
