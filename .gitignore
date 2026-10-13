@@ -1,0 +1,22 @@
+# secrets
+.env
+
+# données générées (garder un échantillon versionné séparément si besoin)
+data/*
+!data/.gitkeep
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# dbt
+dbt_project/target/
+dbt_project/dbt_packages/
+dbt_project/logs/
+dbt_project/.user.yml
+profiles.yml
+
+# os
+.DS_Store
