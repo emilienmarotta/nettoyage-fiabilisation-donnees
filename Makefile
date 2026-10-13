@@ -1,4 +1,4 @@
-.PHONY: up down generate run test
+.PHONY: up down generate ingest run test
 
 up:
 	docker compose up -d
@@ -8,6 +8,9 @@ down:
 
 generate:
 	python -m generator.main
+
+ingest:
+	python -m pipeline.ingest
 
 run:
 	python -m pipeline.run

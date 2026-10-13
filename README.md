@@ -37,6 +37,7 @@ pip install -r requirements.txt
 
 docker compose up -d
 make generate   # génère data/clients_commandes_brut.xlsx + vérité terrain
+make ingest     # charge le classeur tel quel dans le schéma raw Postgres
 make run        # ingestion → nettoyage → dbt build → rapport qualité (à venir)
 ```
 
@@ -48,6 +49,14 @@ fixe) :
   tous les défauts du catalogue) ;
 - `data/verite_terrain.csv` : chaque défaut injecté, avec la valeur
   d'origine et s'il est censé être corrigé ou mis en quarantaine.
+
+L'ingestion (`make ingest`) lit ce classeur onglet par onglet, charge
+chaque ligne telle quelle (tout en texte, sans conversion de type) dans
+`raw.raw_clients` / `raw.raw_produits` / `raw.raw_commandes`, et écarte
+proprement les lignes de structure (total, en-tête répété, ligne vide,
+colonne inutile) dans `raw.structure_ecartee` avec la raison — rejouable
+sans dupliquer (idempotent par fichier source). Détail :
+[specs/02-ingestion.md](specs/02-ingestion.md).
 
 Détails complets à venir au fil des milestones (voir
 [specs/07-deliverables.md](specs/07-deliverables.md)).

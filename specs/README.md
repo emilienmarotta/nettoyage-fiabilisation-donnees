@@ -11,7 +11,7 @@ Statut possible : `Draft` (à valider) · `Approved` (prête à implémenter) ·
 |---|---|---|
 | [00-vision.md](00-vision.md) | Vision, principes, charte de règles, seuils qualité | Approved |
 | [01-generator.md](01-generator.md) | Générateur du fichier désordonné + vérité terrain | Implemented |
-| [02-ingestion.md](02-ingestion.md) | Ingestion brute (raw Postgres) | Approved |
+| [02-ingestion.md](02-ingestion.md) | Ingestion brute (raw Postgres) | Implemented |
 | [03-cleaning.md](03-cleaning.md) | Nettoyage Python, journal, quarantaine | Approved |
 | [04-dbt.md](04-dbt.md) | Modèles et contrôles dbt | Approved |
 | [05-report.md](05-report.md) | Rapport qualité et avant/après | Approved |

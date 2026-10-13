@@ -12,7 +12,7 @@ pour le workflow Git).
   graine fixe), injection des défauts du catalogue, fichier vérité terrain,
   classeur `clients_commandes_brut.xlsx`. Spec :
   [01-generator.md](specs/01-generator.md).
-- [ ] **M2 — Ingestion brute.** Lecture du classeur → schéma `raw` Postgres
+- [x] **M2 — Ingestion brute.** Lecture du classeur → schéma `raw` Postgres
   (tout en texte), détection et journalisation des lignes de structure.
   Spec : [02-ingestion.md](specs/02-ingestion.md).
 - [ ] **M3 — Nettoyage Python.** Modules de règles testés (dates, nombres,
