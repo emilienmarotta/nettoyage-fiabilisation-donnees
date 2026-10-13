@@ -1,6 +1,6 @@
 # 02 — Ingestion brute
 
-**Statut : Approved**
+**Statut : Implemented**
 
 ## Objectif
 
