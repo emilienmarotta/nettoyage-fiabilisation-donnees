@@ -24,7 +24,7 @@ pour le workflow Git).
 - [x] **M5 — Rapport qualité et avant/après.** Réconciliation, taux de
   qualité avant/après, comparaison à la vérité terrain, extrait avant/après.
   Spec : [05-report.md](specs/05-report.md).
-- [ ] **M6 — Orchestration et tests du code.** `make run` de bout en bout,
+- [x] **M6 — Orchestration et tests du code.** `make run` de bout en bout,
   tests unitaires Python, test d'idempotence. Spec :
   [06-orchestration.md](specs/06-orchestration.md).
 - [ ] **M7 — Livrables portfolio Malt.** Captures avant/après et rapport, 3

@@ -1,6 +1,6 @@
 # 06 — Orchestration et tests du code
 
-**Statut : Approved**
+**Statut : Implemented**
 
 ## Objectif
 
@@ -17,7 +17,9 @@ idempotente, avec des tests automatisés sur le code de nettoyage.
 3. `pipeline/clean/` (orchestré par `run.py`) → `clean_staging.*` +
    `correction_log` + `quarantine`.
 4. `dbt build` (staging → clean + tests) → échoue si un test bloquant
-   échoue ou si le seuil de quarantaine (5 %) est dépassé.
+   échoue ou si le seuil de quarantaine est dépassé (garde-fou
+   anti-régression, pas une cible de qualité — 35 % clients/produits, 50 %
+   commandes, voir [04-dbt.md](04-dbt.md)).
 5. `pipeline/report.py` → `docs/rapport_qualite.html` + résumé Markdown.
 
 Cibles `Makefile` : `make up` (docker compose), `make generate`, `make run`
@@ -38,9 +40,9 @@ Cibles `Makefile` : `make up` (docker compose), `make generate`, `make run`
 
 ## Critères de réussite
 
-- [ ] `make run` enchaîne ingestion → nettoyage → dbt build → rapport sans
+- [x] `make run` enchaîne ingestion → nettoyage → dbt build → rapport sans
   intervention manuelle.
-- [ ] `pytest` couvre chaque règle de nettoyage avec au moins un cas normal
+- [x] `pytest` couvre chaque règle de nettoyage avec au moins un cas normal
   et un cas limite.
-- [ ] Le test d'idempotence passe : deux exécutions successives sur le même
+- [x] Le test d'idempotence passe : deux exécutions successives sur le même
   fichier donnent un résultat strictement identique.
