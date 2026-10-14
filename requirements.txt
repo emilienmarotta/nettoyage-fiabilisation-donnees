@@ -2,3 +2,4 @@ faker>=24.0
 openpyxl>=3.1
 pytest>=8.0
 psycopg2-binary>=2.9
+dbt-postgres>=1.8

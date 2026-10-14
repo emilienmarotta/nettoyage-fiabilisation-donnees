@@ -34,12 +34,14 @@ specs-driven). Voir [ROADMAP.md](ROADMAP.md) pour l'avancement et
 cp .env.example .env
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
+cp dbt_project/profiles.yml.example dbt_project/profiles.yml
 
 docker compose up -d
 make generate   # génère data/clients_commandes_brut.xlsx + vérité terrain
 make ingest     # charge le classeur tel quel dans le schéma raw Postgres
 make clean      # nettoie raw.* vers clean_staging.* (corrections + quarantaine)
-make run        # + dbt build + rapport qualité (à venir)
+make dbt        # dbt build : modèles stg_*/clean_* + tests de qualité bloquants
+                # rapport qualité (à venir)
 ```
 
 Le générateur (`make generate`) produit, de façon déterministe (graine
@@ -68,6 +70,27 @@ perdue en silence. Chaque correction appliquée est tracée dans
 `clean_staging.correction_log` (valeur avant/après, règle appliquée).
 Rejouable sans dupliquer. Détail :
 [specs/03-cleaning.md](specs/03-cleaning.md).
+
+dbt (`make dbt`) lit `clean_staging.*` comme source (jamais `raw.*`
+directement), construit des vues `stg_clients/produits/commandes`
+(renommage, typage, dédoublonnage exact final en filet de sécurité) puis des
+tables `clean_clients/produits/commandes` (enrichissement simple côté
+commandes : `montant_total`, flag `commande_valide`), et fait tourner tous
+les tests de qualité bloquants : contraintes génériques (clé primaire,
+valeurs autorisées, intégrité référentielle) et 6 tests personnalisés
+(format email, code postal, quantité positive, cohérence des dates,
+garde-fou anti-régression sur le taux de quarantaine). dbt ne corrige
+jamais rien : une anomalie détectée ici signale une règle de nettoyage
+Python manquante, pas une requête SQL à écrire. Détail :
+[specs/04-dbt.md](specs/04-dbt.md).
+
+**Démonstration volontaire d'échec** : pour vérifier que les tests
+détectent vraiment une régression (et pas seulement qu'ils passent sur des
+données déjà propres), une ligne invalide a été insérée directement dans
+`clean_staging.clients` en contournant Python (email sans `@`) — `dbt build`
+échoue alors immédiatement sur `assert_email_valide`, la ligne a ensuite été
+retirée et `dbt build` revérifié au vert. Détail dans la description de la
+PR du milestone M4.
 
 Détails complets à venir au fil des milestones (voir
 [specs/07-deliverables.md](specs/07-deliverables.md)).

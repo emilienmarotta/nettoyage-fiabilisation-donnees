@@ -18,7 +18,7 @@ pour le workflow Git).
 - [x] **M3 — Nettoyage Python.** Modules de règles testés (dates, nombres,
   identifiants, texte, contacts, doublons), journal des corrections, table
   de quarantaine. Spec : [03-cleaning.md](specs/03-cleaning.md).
-- [ ] **M4 — Modèles et contrôles dbt.** `stg_*` → `clean_*`, tests
+- [x] **M4 — Modèles et contrôles dbt.** `stg_*` → `clean_*`, tests
   génériques + personnalisés bloquants, démonstration d'échec volontaire.
   Spec : [04-dbt.md](specs/04-dbt.md).
 - [ ] **M5 — Rapport qualité et avant/après.** Réconciliation, taux de

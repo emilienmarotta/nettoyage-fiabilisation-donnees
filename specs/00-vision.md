@@ -110,10 +110,20 @@ quarantaine, ou signaler seulement) et la règle exacte. Appliquée dans
 
 ## Seuils de qualité bloquants
 
-- Si **plus de 5 %** des lignes lues (hors lignes de structure) finissent en
-  quarantaine après nettoyage → le pipeline s'arrête en erreur (vérifié en
-  fin d'étape Python et par un test dbt personnalisé sur le volume de
-  `clean_*` vs `raw_*`).
+- Garde-fou anti-régression sur le taux de quarantaine (pas un objectif de
+  qualité absolu — le catalogue de défauts de M1 injecte délibérément
+  beaucoup de défauts non corrigeables pour démontrer la détection, pas pour
+  rester sous un seuil de production) : si le taux de quarantaine dépasse
+  **35 % sur `clients`/`produits`** (défauts injectés directement — mesuré
+  ~20-25 % sur ce jeu de données) ou **50 % sur `commandes`** (défauts
+  propres aux commandes **+ cascade référentielle** : une commande dont le
+  client ou le produit est en quarantaine est elle-même en quarantaine,
+  mesuré ~35 % sur ce jeu de données) → le pipeline s'arrête en erreur
+  (vérifié en fin d'étape Python et par un test dbt personnalisé sur le
+  volume de `clean_*` vs `raw_*`). Ces seuils attrapent une vraie régression
+  de nettoyage (ex. un bug de parsing qui ferait exploser la quarantaine,
+  comme observé et corrigé en M3) sans faire échouer le pipeline sur le
+  volume de défauts normal et attendu de ce jeu de données démo.
 - Tout test dbt générique critique (`unique`, `not_null` sur clé primaire,
   `relationships` commande→client et commande→produit) doit passer à 100 % :
   aucune exception tolérée sur les tables `clean_*`.
