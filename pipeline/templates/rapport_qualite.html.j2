@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Rapport qualité — nettoyage et fiabilisation de données</title>
+<style>
+  :root {
+    --ok: #1a7f37; --ko: #cf222e; --muted: #656d76; --border: #d0d7de;
+    --bg-soft: #f6f8fa; --accent: #0969da;
+  }
+  body { font-family: -apple-system, Segoe UI, Helvetica, Arial, sans-serif;
+         max-width: 980px; margin: 2rem auto; padding: 0 1.5rem; color: #1f2328; line-height: 1.5; }
+  h1 { font-size: 1.6rem; }
+  h2 { font-size: 1.25rem; margin-top: 2.5rem; border-bottom: 1px solid var(--border); padding-bottom: .3rem; }
+  .disclaimer { background: #fff8c5; border: 1px solid #d4a72c; border-radius: 6px;
+                padding: .75rem 1rem; font-size: .9rem; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: .9rem; }
+  th, td { border: 1px solid var(--border); padding: .4rem .6rem; text-align: left; }
+  th { background: var(--bg-soft); }
+  td.num, th.num { text-align: right; }
+  .ok { color: var(--ok); font-weight: 600; }
+  .ko { color: var(--ko); font-weight: 600; }
+  .muted { color: var(--muted); }
+  .badge { display: inline-block; padding: .1rem .5rem; border-radius: 10px; font-size: .8rem; font-weight: 600; }
+  .badge.ok { background: #d1f7dc; color: var(--ok); }
+  .badge.ko { background: #ffebe9; color: var(--ko); }
+  .diff-avant { color: var(--ko); text-decoration: line-through; }
+  .diff-apres { color: var(--ok); font-weight: 600; }
+  .cell-corrigee { background: #fff8c5; }
+  .barre { display: inline-block; height: .6rem; background: var(--accent); border-radius: 3px; }
+  .barre-fond { display: inline-block; width: 100px; height: .6rem; background: var(--bg-soft);
+                border-radius: 3px; vertical-align: middle; margin-right: .4rem; }
+  footer { margin-top: 3rem; color: var(--muted); font-size: .85rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  code { background: var(--bg-soft); padding: .1rem .3rem; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<h1>Rapport qualité — nettoyage et fiabilisation de données</h1>
+<p class="disclaimer">
+  Projet de démonstration portfolio — <strong>données 100&nbsp;% fictives</strong>.
+  Les défauts mesurés ci-dessous sont injectés volontairement par un générateur
+  (voir <code>specs/01-generator.md</code>) : c'est ce qui permet de comparer le
+  résultat du pipeline à une vérité terrain connue et de mesurer un vrai taux de
+  correction, pas une estimation.
+</p>
+<p class="muted">Fichier source : <code>{{ source_fichier }}</code></p>
+
+<h2>1. Réconciliation des volumes</h2>
+<p>Chaque ligne lue finit dans une table propre, en quarantaine, fusionnée avec
+un doublon, ou écartée comme ligne de structure — jamais perdue en silence.</p>
+<table>
+  <tr>
+    <th>Table</th><th class="num">Lues</th><th class="num">Structure écartée</th>
+    <th class="num">Propres</th><th class="num">Quarantaine</th><th class="num">Fusionnées</th>
+    <th>Réconciliation</th>
+  </tr>
+  {% for r in reconciliation %}
+  <tr>
+    <td>{{ r.table }}</td>
+    <td class="num">{{ r.lues }}</td>
+    <td class="num">{{ r.structure }}</td>
+    <td class="num">{{ r.propres }}</td>
+    <td class="num">{{ r.quarantaine }}</td>
+    <td class="num">{{ r.fusionnes }}</td>
+    <td>
+      {% if r.ok_ingestion and r.ok_nettoyage %}
+        <span class="badge ok">OK</span>
+      {% else %}
+        <span class="badge ko">KO</span>
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>2. Répartition par type de défaut</h2>
+
+<h3>Corrections appliquées</h3>
+<table>
+  <tr><th>Règle appliquée</th><th class="num">Occurrences</th></tr>
+  {% for regle, n in defauts.corrections %}
+  <tr><td>{{ regle }}</td><td class="num">{{ n }}</td></tr>
+  {% endfor %}
+</table>
+
+<h3>Lignes en quarantaine (par motif)</h3>
+<table>
+  <tr><th>Motif de rejet</th><th class="num">Occurrences</th></tr>
+  {% for motif, n in defauts.quarantaine %}
+  <tr><td>{{ motif }}</td><td class="num">{{ n }}</td></tr>
+  {% endfor %}
+</table>
+
+<h3>Lignes de structure écartées à l'ingestion</h3>
+<table>
+  <tr><th>Raison</th><th class="num">Occurrences</th></tr>
+  {% for raison, n in defauts.structure %}
+  <tr><td>{{ raison }}</td><td class="num">{{ n }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>3. Taux de qualité avant / après</h2>
+<p>Calculés sur les données brutes (<code>raw.*</code>) vs les données propres
+(<code>clean_staging.*</code>). « — » = dimension non applicable à cette table.</p>
+<table>
+  <tr>
+    <th>Table</th>
+    <th class="num">Complétude avant</th><th class="num">Complétude après</th>
+    <th class="num">Unicité avant</th><th class="num">Unicité après</th>
+    <th class="num">Validité avant</th><th class="num">Validité après</th>
+    <th class="num">Cohérence avant</th><th class="num">Cohérence après</th>
+  </tr>
+  {% for table, q in qualite.items() %}
+  <tr>
+    <td>{{ table }}</td>
+    <td class="num">{{ "%.0f%%"|format(q.completude_avant * 100) }}</td>
+    <td class="num">{{ "%.0f%%"|format(q.completude_apres * 100) }}</td>
+    <td class="num">{{ "%.0f%%"|format(q.unicite_avant * 100) }}</td>
+    <td class="num">{{ "%.0f%%"|format(q.unicite_apres * 100) }}</td>
+    <td class="num">{{ "%.0f%%"|format(q.validite_avant * 100) }}</td>
+    <td class="num">{{ "%.0f%%"|format(q.validite_apres * 100) }}</td>
+    <td class="num">{% if q.coherence_avant is none %}—{% else %}{{ "%.0f%%"|format(q.coherence_avant * 100) }}{% endif %}</td>
+    <td class="num">{% if q.coherence_apres is none %}—{% else %}{{ "%.0f%%"|format(q.coherence_apres * 100) }}{% endif %}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>4. Comparaison avec la vérité terrain</h2>
+{% if verite_terrain %}
+<p>
+  Taux de correction mesuré :
+  <span class="{{ 'ok' if verite_terrain.atteint else 'ko' }}">
+    {{ "%.1f%%"|format(verite_terrain.taux_global * 100) }}
+  </span>
+  — cible ≥ {{ "%.0f%%"|format(verite_terrain.cible * 100) }}
+  (<span class="badge {{ 'ok' if verite_terrain.atteint else 'ko' }}">
+    {{ "atteint" if verite_terrain.atteint else "non atteint" }}
+  </span>)
+</p>
+<table>
+  <tr><th>Catégorie de défaut</th><th class="num">Taux de réussite</th></tr>
+  {% for cat, taux in verite_terrain.par_categorie.items() %}
+  <tr>
+    <td>{{ cat }}</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: {{ (taux*100)|round|int }}px"></span></span>
+      {{ "%.0f%%"|format(taux * 100) }}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% if verite_terrain.echecs %}
+<details>
+  <summary>{{ verite_terrain.echecs|length }} écart(s) détaillé(s) (voir specs/00-vision.md pour le cas connu
+  des quasi-doublons incertains dont la ligne jumelle est quarantinée pour une autre raison)</summary>
+  <table>
+    <tr><th>Onglet</th><th>Ligne</th><th>Raison</th></tr>
+    {% for e in verite_terrain.echecs %}
+    <tr><td>{{ e.onglet }}</td><td>{{ e.ligne }}</td><td>{{ e.raison }}</td></tr>
+    {% endfor %}
+  </table>
+</details>
+{% endif %}
+{% else %}
+<p class="muted">Vérité terrain non disponible (lancer <code>make generate</code> au préalable).</p>
+{% endif %}
+
+<h2>5. Résultat des tests dbt</h2>
+{% if dbt %}
+<p>
+  <span class="{{ 'ok' if dbt.nb_tests_echec == 0 else 'ko' }}">
+    {{ dbt.nb_tests_ok }}/{{ dbt.nb_tests }} tests passés
+  </span>
+  sur {{ dbt.nb_modeles }} modèles ({{ dbt.genere_le }}).
+</p>
+{% if dbt.tests_echoues %}
+<table>
+  <tr><th>Test</th><th>Statut</th></tr>
+  {% for t in dbt.tests_echoues %}
+  <tr><td>{{ t.nom }}</td><td class="ko">{{ t.statut }}</td></tr>
+  {% endfor %}
+</table>
+{% endif %}
+{% else %}
+<p class="muted">Résultats dbt non disponibles (lancer <code>make dbt</code> au préalable).</p>
+{% endif %}
+
+<h2>6. Avant / après — extrait</h2>
+<p>Quelques lignes corrigées par le pipeline, valeur brute barrée à gauche,
+valeur propre à droite (cellules corrigées surlignées).</p>
+{% for table, extrait in avant_apres.items() %}
+{% if extrait %}
+<h3>{{ table }}</h3>
+<table>
+  <tr>
+    <th>Ligne</th>
+    {% for colonne in extrait[0].raw.keys() if colonne not in ("source_fichier", "source_onglet", "ligne_origine", "charge_le") %}
+    <th>{{ colonne }}</th>
+    {% endfor %}
+  </tr>
+  {% for e in extrait %}
+  <tr>
+    <td>{{ e.ligne_origine }}</td>
+    {% for colonne, valeur in e.raw.items() if colonne not in ("source_fichier", "source_onglet", "ligne_origine", "charge_le") %}
+    <td class="{{ 'cell-corrigee' if colonne in e.colonnes_corrigees else '' }}">
+      {% if colonne in e.colonnes_corrigees and e.clean %}
+        <span class="diff-avant">{{ valeur }}</span><br>
+        <span class="diff-apres">{{ e.clean.get(colonne) }}</span>
+      {% else %}
+        {{ valeur }}
+      {% endif %}
+    </td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+{% endfor %}
+
+<footer>
+  Généré automatiquement par <code>pipeline/report.py</code> — voir
+  <code>specs/05-report.md</code>. Aucun bénéfice chiffré présenté ici n'est un
+  résultat mesuré en production réelle : ce projet est une démonstration de
+  méthode sur données fictives.
+</footer>
+
+</body>
+</html>

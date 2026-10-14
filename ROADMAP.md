@@ -21,7 +21,7 @@ pour le workflow Git).
 - [x] **M4 — Modèles et contrôles dbt.** `stg_*` → `clean_*`, tests
   génériques + personnalisés bloquants, démonstration d'échec volontaire.
   Spec : [04-dbt.md](specs/04-dbt.md).
-- [ ] **M5 — Rapport qualité et avant/après.** Réconciliation, taux de
+- [x] **M5 — Rapport qualité et avant/après.** Réconciliation, taux de
   qualité avant/après, comparaison à la vérité terrain, extrait avant/après.
   Spec : [05-report.md](specs/05-report.md).
 - [ ] **M6 — Orchestration et tests du code.** `make run` de bout en bout,
