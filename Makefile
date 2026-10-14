@@ -1,4 +1,4 @@
-.PHONY: up down generate ingest clean dbt report test
+.PHONY: up down generate ingest clean dbt report run test
 
 up:
 	docker compose up -d
@@ -20,6 +20,9 @@ dbt:
 
 report:
 	python -m pipeline.report
+
+run:
+	python -m pipeline.run
 
 test:
 	pytest

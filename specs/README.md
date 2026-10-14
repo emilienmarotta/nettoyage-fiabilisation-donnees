@@ -15,7 +15,7 @@ Statut possible : `Draft` (à valider) · `Approved` (prête à implémenter) ·
 | [03-cleaning.md](03-cleaning.md) | Nettoyage Python, journal, quarantaine | Implemented |
 | [04-dbt.md](04-dbt.md) | Modèles et contrôles dbt | Implemented |
 | [05-report.md](05-report.md) | Rapport qualité et avant/après | Implemented |
-| [06-orchestration.md](06-orchestration.md) | Orchestration et tests du code | Approved |
+| [06-orchestration.md](06-orchestration.md) | Orchestration et tests du code | Implemented |
 | [07-deliverables.md](07-deliverables.md) | Livrables portfolio Malt | Approved |
 
 Ordre d'implémentation : 00 → 01 → 02 → 03 → 04 → 05 → 06 → 07 (chaque spec

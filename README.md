@@ -44,6 +44,14 @@ make dbt        # dbt build : modèles stg_*/clean_* + tests de qualité bloquan
 make report     # docs/rapport_qualite.html + docs/rapport_qualite.md
 ```
 
+Les 4 étapes `ingest` → `clean` → `dbt` → `report` peuvent aussi
+s'enchaîner en une seule commande, chacune s'arrêtant en erreur claire (pas
+de continuation silencieuse sur un pipeline cassé) :
+
+```bash
+make run
+```
+
 Le générateur (`make generate`) produit, de façon déterministe (graine
 fixe) :
 - `data/parfait/{clients,produits,commandes}.csv` : le jeu de données
@@ -106,6 +114,17 @@ généré en parallèle. Réutilise directement les mêmes fonctions de
 validation que le nettoyage (`pipeline/clean/*`), pour que le rapport
 mesure exactement ce que le pipeline applique. Détail :
 [specs/05-report.md](specs/05-report.md).
+
+`pipeline/run.py` (`make run`) enchaîne ingestion → nettoyage → `dbt build`
+→ rapport en une seule commande, chaque étape s'arrêtant immédiatement si
+sa réconciliation échoue ou si `dbt build` échoue — pas de continuation
+silencieuse sur un pipeline cassé. `make test` (`pytest`) couvre chaque
+règle de nettoyage (cas normal + cas limite) et inclut un test
+d'idempotence (`tests/test_idempotence.py`) qui exécute ingestion +
+nettoyage deux fois sur le même fichier et vérifie que `clean_staging.*`
+est strictement identique à l'issue des deux passes — ce test est ignoré
+proprement si Postgres n'est pas démarré. Détail :
+[specs/06-orchestration.md](specs/06-orchestration.md).
 
 Détails complets à venir au fil des milestones (voir
 [specs/07-deliverables.md](specs/07-deliverables.md)).
