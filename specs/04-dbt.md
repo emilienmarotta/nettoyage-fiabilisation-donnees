@@ -1,6 +1,6 @@
 # 04 — Modèles et contrôles dbt
 
-**Statut : Approved**
+**Statut : Implemented**
 
 ## Objectif
 
@@ -67,9 +67,9 @@ pas décoratifs.
 
 ## Critères de réussite
 
-- [ ] `dbt build` passe à 100 % sur les données nettoyées par le pipeline
+- [x] `dbt build` passe à 100 % sur les données nettoyées par le pipeline
   normal.
-- [ ] `dbt test` échoue si on réinjecte un défaut critique directement en
+- [x] `dbt test` échoue si on réinjecte un défaut critique directement en
   base (démontré et documenté).
-- [ ] Aucune logique de nettoyage dupliquée entre Python et dbt : dbt lit des
+- [x] Aucune logique de nettoyage dupliquée entre Python et dbt : dbt lit des
   données déjà propres, il ne les corrige pas.

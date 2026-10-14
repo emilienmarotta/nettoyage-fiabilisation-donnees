@@ -13,7 +13,7 @@ Statut possible : `Draft` (à valider) · `Approved` (prête à implémenter) ·
 | [01-generator.md](01-generator.md) | Générateur du fichier désordonné + vérité terrain | Implemented |
 | [02-ingestion.md](02-ingestion.md) | Ingestion brute (raw Postgres) | Implemented |
 | [03-cleaning.md](03-cleaning.md) | Nettoyage Python, journal, quarantaine | Implemented |
-| [04-dbt.md](04-dbt.md) | Modèles et contrôles dbt | Approved |
+| [04-dbt.md](04-dbt.md) | Modèles et contrôles dbt | Implemented |
 | [05-report.md](05-report.md) | Rapport qualité et avant/après | Approved |
 | [06-orchestration.md](06-orchestration.md) | Orchestration et tests du code | Approved |
 | [07-deliverables.md](07-deliverables.md) | Livrables portfolio Malt | Approved |

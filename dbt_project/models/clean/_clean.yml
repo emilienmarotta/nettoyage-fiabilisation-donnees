@@ -1,0 +1,82 @@
+version: 2
+
+models:
+  - name: clean_clients
+    description: >
+      Clients nettoyés par Python (corrections appliquées, quasi-doublons
+      fusionnés — voir specs/00-vision.md) + dédoublonnage exact final dbt
+      en filet de sécurité.
+    columns:
+      - name: client_id
+        description: Identifiant client, clé primaire.
+        data_tests:
+          - unique
+          - not_null
+      - name: email
+        description: >
+          Email client — format minimal `^[^@\s]+@[^@\s]+\.[^@\s]+$` déjà
+          vérifié par Python (motif `email_invalide` sinon), revérifié ici
+          par un test personnalisé (assert_email_valide.sql).
+      - name: code_postal
+        description: >
+          Code postal français à 5 chiffres, revérifié par un test
+          personnalisé (assert_code_postal_5_chiffres.sql).
+      - name: segment
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["grand_compte", "pme", "detaillant"]
+
+  - name: clean_produits
+    description: Produits nettoyés par Python.
+    columns:
+      - name: produit_id
+        description: Identifiant produit, clé primaire.
+        data_tests:
+          - unique
+          - not_null
+      - name: categorie
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - emballage
+                  - hygiene
+                  - boissons
+                  - alimentaire
+                  - papier
+                  - protection
+                  - entretien
+                  - textile
+
+  - name: clean_commandes
+    description: >
+      Commandes nettoyées par Python (références client/produit déjà
+      vérifiées) + enrichissement dbt (montant_total, flag commande_valide).
+    columns:
+      - name: commande_id
+        description: Identifiant commande, clé primaire.
+        data_tests:
+          - unique
+          - not_null
+      - name: client_id
+        description: Référence vers clean_clients.client_id.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('clean_clients')
+                field: client_id
+      - name: produit_id
+        description: Référence vers clean_produits.produit_id.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('clean_produits')
+                field: produit_id
+      - name: statut
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["Livrée", "En cours", "Annulée"]

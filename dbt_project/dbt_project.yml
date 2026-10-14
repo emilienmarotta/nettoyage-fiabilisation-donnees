@@ -1,0 +1,22 @@
+name: "nettoyage_fiabilisation_donnees"
+version: "1.0.0"
+config-version: 2
+
+profile: "nettoyage_fiabilisation_donnees"
+
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+seed-paths: ["seeds"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  nettoyage_fiabilisation_donnees:
+    staging:
+      +materialized: view
+    clean:
+      +materialized: table

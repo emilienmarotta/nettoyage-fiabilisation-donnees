@@ -1,0 +1,22 @@
+version: 2
+
+sources:
+  - name: clean_staging
+    description: >
+      Écrit par le nettoyage Python (voir specs/03-cleaning.md) : lignes déjà
+      propres ou mises en quarantaine avec un motif. dbt ne fait que lire ce
+      schéma, jamais écrire dedans.
+    schema: clean_staging
+    tables:
+      - name: clients
+        description: Clients déjà nettoyés par Python (corrections appliquées, quasi-doublons fusionnés).
+      - name: produits
+        description: Produits déjà nettoyés par Python.
+      - name: commandes
+        description: Commandes déjà nettoyées par Python (références client/produit déjà vérifiées).
+      - name: quarantine
+        description: >
+          Lignes rejetées par le nettoyage Python avec un motif
+          (`motif_rejet`) — jamais de données ambiguës passées en silence.
+      - name: correction_log
+        description: Historique de chaque correction appliquée par Python (valeur avant/après, règle).

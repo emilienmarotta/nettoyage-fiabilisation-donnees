@@ -1,0 +1,15 @@
+# Copier en dbt_project/profiles.yml (gitignoré). Mêmes variables que .env
+# (voir pipeline/db.py) — dbt lit directement les variables d'environnement
+# du shell, donc `source .env` (ou export manuel) avant toute commande dbt.
+nettoyage_fiabilisation_donnees:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('POSTGRES_HOST', 'localhost') }}"
+      port: "{{ env_var('POSTGRES_PORT', '5434') | as_number }}"
+      dbname: "{{ env_var('POSTGRES_DB', 'nettoyage_fiabilisation') }}"
+      user: "{{ env_var('POSTGRES_USER', 'pipeline_user') }}"
+      password: "{{ env_var('POSTGRES_PASSWORD', 'change_me') }}"
+      schema: public
+      threads: 4
