@@ -94,11 +94,11 @@ quarantaine, ou signaler seulement) et la règle exacte. Appliquée dans
 | Dates | Ambiguïté jour/mois (ex. `03/04/2025`) | **Jamais deviné** : convention française fixe `JJ/MM/AAAA` appliquée uniformément et documentée ici, pas de détection cas par cas |
 | Dates | Texte invalide, date non parsable | Quarantaine, motif `date_invalide` |
 | Dates | Date de livraison future aberrante (> date du jour + 2 ans) ou antérieure à 2015 | Quarantaine, motif `date_aberrante` |
-| Nombres | Formats connus : `1 234,50`, `1234.5`, `1.234,50 €`, `12,5%` | Parser (retirer séparateurs de milliers, symboles `€`/`%`, normaliser séparateur décimal) → décimal ; tracé dans `correction_log` |
-| Nombres | Texte non numérique dans colonne numérique | Quarantaine, motif `valeur_numerique_invalide` |
+| Nombres | Formats connus : `1 234,50`, `1234.50`, `1.234,50 €` | Parser (retirer séparateurs de milliers, symbole `€`, normaliser séparateur décimal) → décimal ; tracé dans `correction_log` |
+| Nombres | Texte non numérique dans colonne numérique, **ou présence du symbole `%`** (une quantité/un prix n'est jamais un pourcentage ; vu dans nos colonnes, c'est toujours une ressaisie erronée, jamais une notation fiable) | Quarantaine, motif `valeur_numerique_invalide` |
 | Champs vides | `""`, `N/A`, `-`, `null`, espaces seuls | Normalisé en `NULL` ; si la colonne est obligatoire pour la ligne (ex. `client_id` d'une commande), quarantaine motif `champ_obligatoire_vide` |
 | Identifiants | Code postal à 4 chiffres (zéro initial perdu) | Recomplété avec un zéro initial (CP français = 5 chiffres), tracé dans `correction_log` |
-| Identifiants | SIRET en notation scientifique | Reconverti en entier 14 chiffres si reconstituable sans perte ; sinon quarantaine motif `siret_illisible` |
+| Identifiants | SIRET en notation scientifique | Reconverti en entier 14 chiffres (complété par des zéros de tête si l'exposant indique un SIRET dont le zéro initial a été perdu lors de la conversion Excel en nombre, ex. `7,68104E+12` → `07681040000000`) si la notation conserve au moins 5 chiffres significatifs après la virgule (seuil documenté, ex. `1,04332E+13`) ; sinon quarantaine motif `siret_illisible` (notation trop pauvre, ex. `1,0E+13`, pour reconstituer un identifiant fiable) |
 | Identifiants | Code produit en casse mixte | Normalisé en majuscules, tracé dans `correction_log` |
 | Catégories | Variantes de casse/orthographe (`Hygiène` / `hygiene` / `Hygiene` / `HYGIENE`) sur la liste fixe du projet (cf. [01-generator.md](01-generator.md)) | Normalisées via une table de correspondance explicite et documentée (mapping figé, pas de rapprochement flou automatique) |
 | Contacts | Email sans `@` ou format invalide | **Jamais corrigé** : quarantaine motif `email_invalide` |

@@ -32,3 +32,13 @@ def est_entete_repete(valeurs: list, labels_attendus: list[str]) -> bool:
     if len(valeurs) != len(labels_attendus):
         return False
     return [_normalise(v) for v in valeurs] == [_normalise(lbl) for lbl in labels_attendus]
+
+
+def est_banniere(valeurs: list) -> bool:
+    """Ligne de bannière sur cellule fusionnée (ex. « --- Export mensuel -
+    Service commercial --- ») : seule la première colonne porte une valeur
+    (le reste de la ligne fusionnée est lu vide par openpyxl), et cette
+    valeur commence par le marqueur explicite `---`."""
+    if not valeurs or _normalise(valeurs[0]) == "":
+        return False
+    return _normalise(valeurs[0]).startswith("---")

@@ -15,7 +15,7 @@ pour le workflow Git).
 - [x] **M2 — Ingestion brute.** Lecture du classeur → schéma `raw` Postgres
   (tout en texte), détection et journalisation des lignes de structure.
   Spec : [02-ingestion.md](specs/02-ingestion.md).
-- [ ] **M3 — Nettoyage Python.** Modules de règles testés (dates, nombres,
+- [x] **M3 — Nettoyage Python.** Modules de règles testés (dates, nombres,
   identifiants, texte, contacts, doublons), journal des corrections, table
   de quarantaine. Spec : [03-cleaning.md](specs/03-cleaning.md).
 - [ ] **M4 — Modèles et contrôles dbt.** `stg_*` → `clean_*`, tests
