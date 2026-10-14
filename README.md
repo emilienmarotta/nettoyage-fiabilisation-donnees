@@ -41,7 +41,7 @@ make generate   # génère data/clients_commandes_brut.xlsx + vérité terrain
 make ingest     # charge le classeur tel quel dans le schéma raw Postgres
 make clean      # nettoie raw.* vers clean_staging.* (corrections + quarantaine)
 make dbt        # dbt build : modèles stg_*/clean_* + tests de qualité bloquants
-                # rapport qualité (à venir)
+make report     # docs/rapport_qualite.html + docs/rapport_qualite.md
 ```
 
 Le générateur (`make generate`) produit, de façon déterministe (graine
@@ -91,6 +91,21 @@ données déjà propres), une ligne invalide a été insérée directement dans
 échoue alors immédiatement sur `assert_email_valide`, la ligne a ensuite été
 retirée et `dbt build` revérifié au vert. Détail dans la description de la
 PR du milestone M4.
+
+Le rapport qualité (`make report`) relit Postgres (`raw.*`,
+`clean_staging.*`, `correction_log`, `quarantine`) ainsi que le fichier
+vérité terrain et les résultats dbt, et génère `docs/rapport_qualite.html`
+— un fichier HTML autonome (CSS inline, aucune dépendance réseau), lisible
+sans contexte technique : réconciliation des volumes, répartition des
+défauts par type, taux de qualité avant/après sur 4 dimensions
+(complétude/unicité/validité/cohérence), comparaison au cas par cas avec la
+vérité terrain (taux de correction mesuré, pas estimé), résultat des tests
+dbt, et un extrait avant/après de 8 à 10 lignes par table avec les cellules
+corrigées surlignées. Un résumé Markdown (`docs/rapport_qualite.md`) est
+généré en parallèle. Réutilise directement les mêmes fonctions de
+validation que le nettoyage (`pipeline/clean/*`), pour que le rapport
+mesure exactement ce que le pipeline applique. Détail :
+[specs/05-report.md](specs/05-report.md).
 
 Détails complets à venir au fil des milestones (voir
 [specs/07-deliverables.md](specs/07-deliverables.md)).

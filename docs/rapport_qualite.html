@@ -1,0 +1,2484 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Rapport qualité — nettoyage et fiabilisation de données</title>
+<style>
+  :root {
+    --ok: #1a7f37; --ko: #cf222e; --muted: #656d76; --border: #d0d7de;
+    --bg-soft: #f6f8fa; --accent: #0969da;
+  }
+  body { font-family: -apple-system, Segoe UI, Helvetica, Arial, sans-serif;
+         max-width: 980px; margin: 2rem auto; padding: 0 1.5rem; color: #1f2328; line-height: 1.5; }
+  h1 { font-size: 1.6rem; }
+  h2 { font-size: 1.25rem; margin-top: 2.5rem; border-bottom: 1px solid var(--border); padding-bottom: .3rem; }
+  .disclaimer { background: #fff8c5; border: 1px solid #d4a72c; border-radius: 6px;
+                padding: .75rem 1rem; font-size: .9rem; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: .9rem; }
+  th, td { border: 1px solid var(--border); padding: .4rem .6rem; text-align: left; }
+  th { background: var(--bg-soft); }
+  td.num, th.num { text-align: right; }
+  .ok { color: var(--ok); font-weight: 600; }
+  .ko { color: var(--ko); font-weight: 600; }
+  .muted { color: var(--muted); }
+  .badge { display: inline-block; padding: .1rem .5rem; border-radius: 10px; font-size: .8rem; font-weight: 600; }
+  .badge.ok { background: #d1f7dc; color: var(--ok); }
+  .badge.ko { background: #ffebe9; color: var(--ko); }
+  .diff-avant { color: var(--ko); text-decoration: line-through; }
+  .diff-apres { color: var(--ok); font-weight: 600; }
+  .cell-corrigee { background: #fff8c5; }
+  .barre { display: inline-block; height: .6rem; background: var(--accent); border-radius: 3px; }
+  .barre-fond { display: inline-block; width: 100px; height: .6rem; background: var(--bg-soft);
+                border-radius: 3px; vertical-align: middle; margin-right: .4rem; }
+  footer { margin-top: 3rem; color: var(--muted); font-size: .85rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  code { background: var(--bg-soft); padding: .1rem .3rem; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<h1>Rapport qualité — nettoyage et fiabilisation de données</h1>
+<p class="disclaimer">
+  Projet de démonstration portfolio — <strong>données 100&nbsp;% fictives</strong>.
+  Les défauts mesurés ci-dessous sont injectés volontairement par un générateur
+  (voir <code>specs/01-generator.md</code>) : c'est ce qui permet de comparer le
+  résultat du pipeline à une vérité terrain connue et de mesurer un vrai taux de
+  correction, pas une estimation.
+</p>
+<p class="muted">Fichier source : <code>clients_commandes_brut.xlsx</code></p>
+
+<h2>1. Réconciliation des volumes</h2>
+<p>Chaque ligne lue finit dans une table propre, en quarantaine, fusionnée avec
+un doublon, ou écartée comme ligne de structure — jamais perdue en silence.</p>
+<table>
+  <tr>
+    <th>Table</th><th class="num">Lues</th><th class="num">Structure écartée</th>
+    <th class="num">Propres</th><th class="num">Quarantaine</th><th class="num">Fusionnées</th>
+    <th>Réconciliation</th>
+  </tr>
+  
+  <tr>
+    <td>clients</td>
+    <td class="num">354</td>
+    <td class="num">9</td>
+    <td class="num">243</td>
+    <td class="num">79</td>
+    <td class="num">23</td>
+    <td>
+      
+        <span class="badge ok">OK</span>
+      
+    </td>
+  </tr>
+  
+  <tr>
+    <td>produits</td>
+    <td class="num">159</td>
+    <td class="num">9</td>
+    <td class="num">133</td>
+    <td class="num">17</td>
+    <td class="num">0</td>
+    <td>
+      
+        <span class="badge ok">OK</span>
+      
+    </td>
+  </tr>
+  
+  <tr>
+    <td>commandes</td>
+    <td class="num">3009</td>
+    <td class="num">9</td>
+    <td class="num">1939</td>
+    <td class="num">1061</td>
+    <td class="num">0</td>
+    <td>
+      
+        <span class="badge ok">OK</span>
+      
+    </td>
+  </tr>
+  
+</table>
+
+<h2>2. Répartition par type de défaut</h2>
+
+<h3>Corrections appliquées</h3>
+<table>
+  <tr><th>Règle appliquée</th><th class="num">Occurrences</th></tr>
+  
+  <tr><td>nombre_reformat</td><td class="num">68</td></tr>
+  
+  <tr><td>date_reformat</td><td class="num">60</td></tr>
+  
+  <tr><td>telephone_format</td><td class="num">25</td></tr>
+  
+  <tr><td>code_produit_casse</td><td class="num">25</td></tr>
+  
+  <tr><td>categorie_casse</td><td class="num">25</td></tr>
+  
+  <tr><td>champ_vide_normalise</td><td class="num">24</td></tr>
+  
+  <tr><td>siret_scientifique</td><td class="num">19</td></tr>
+  
+  <tr><td>doublon_exact</td><td class="num">15</td></tr>
+  
+  <tr><td>doublon_quasi_evident</td><td class="num">8</td></tr>
+  
+  <tr><td>code_postal_4_chiffres</td><td class="num">2</td></tr>
+  
+</table>
+
+<h3>Lignes en quarantaine (par motif)</h3>
+<table>
+  <tr><th>Motif de rejet</th><th class="num">Occurrences</th></tr>
+  
+  <tr><td>reference_inexistante</td><td class="num">966</td></tr>
+  
+  <tr><td>valeur_numerique_invalide</td><td class="num">47</td></tr>
+  
+  <tr><td>champ_obligatoire_vide</td><td class="num">35</td></tr>
+  
+  <tr><td>doublon_quasi_incertain</td><td class="num">33</td></tr>
+  
+  <tr><td>livraison_avant_commande</td><td class="num">31</td></tr>
+  
+  <tr><td>quantite_ou_prix_invalide</td><td class="num">25</td></tr>
+  
+  <tr><td>email_invalide</td><td class="num">20</td></tr>
+  
+  <tr><td>date_invalide</td><td class="num">20</td></tr>
+  
+  <tr><td>date_aberrante</td><td class="num">19</td></tr>
+  
+  <tr><td>siret_illisible</td><td class="num">15</td></tr>
+  
+</table>
+
+<h3>Lignes de structure écartées à l'ingestion</h3>
+<table>
+  <tr><th>Raison</th><th class="num">Occurrences</th></tr>
+  
+  <tr><td>ligne_vide</td><td class="num">9</td></tr>
+  
+  <tr><td>ligne_total</td><td class="num">6</td></tr>
+  
+  <tr><td>en_tete_repete</td><td class="num">6</td></tr>
+  
+  <tr><td>banniere</td><td class="num">3</td></tr>
+  
+  <tr><td>colonne_inutile</td><td class="num">3</td></tr>
+  
+</table>
+
+<h2>3. Taux de qualité avant / après</h2>
+<p>Calculés sur les données brutes (<code>raw.*</code>) vs les données propres
+(<code>clean_staging.*</code>). « — » = dimension non applicable à cette table.</p>
+<table>
+  <tr>
+    <th>Table</th>
+    <th class="num">Complétude avant</th><th class="num">Complétude après</th>
+    <th class="num">Unicité avant</th><th class="num">Unicité après</th>
+    <th class="num">Validité avant</th><th class="num">Validité après</th>
+    <th class="num">Cohérence avant</th><th class="num">Cohérence après</th>
+  </tr>
+  
+  <tr>
+    <td>clients</td>
+    <td class="num">96%</td>
+    <td class="num">100%</td>
+    <td class="num">92%</td>
+    <td class="num">100%</td>
+    <td class="num">98%</td>
+    <td class="num">100%</td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+  </tr>
+  
+  <tr>
+    <td>produits</td>
+    <td class="num">100%</td>
+    <td class="num">100%</td>
+    <td class="num">100%</td>
+    <td class="num">100%</td>
+    <td class="num">94%</td>
+    <td class="num">100%</td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+  </tr>
+  
+  <tr>
+    <td>commandes</td>
+    <td class="num">100%</td>
+    <td class="num">100%</td>
+    <td class="num">100%</td>
+    <td class="num">100%</td>
+    <td class="num">100%</td>
+    <td class="num">100%</td>
+    <td class="num">95%</td>
+    <td class="num">100%</td>
+  </tr>
+  
+</table>
+
+<h2>4. Comparaison avec la vérité terrain</h2>
+
+<p>
+  Taux de correction mesuré :
+  <span class="ok">
+    98.1%
+  </span>
+  — cible ≥ 95%
+  (<span class="badge ok">
+    atteint
+  </span>)
+</p>
+<table>
+  <tr><th>Catégorie de défaut</th><th class="num">Taux de réussite</th></tr>
+  
+  <tr>
+    <td>categorie_casse</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 100px"></span></span>
+      100%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>champ_obligatoire_vide</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 100px"></span></span>
+      100%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>champ_vide_normalise</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 97px"></span></span>
+      97%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>code_postal_4_chiffres</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 96px"></span></span>
+      96%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>code_produit_casse</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 100px"></span></span>
+      100%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>date_aberrante</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 100px"></span></span>
+      100%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>date_format_iso</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 100px"></span></span>
+      100%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>date_format_texte_fr</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 100px"></span></span>
+      100%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>date_invalide</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 100px"></span></span>
+      100%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>date_serie_excel</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 100px"></span></span>
+      100%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>doublon_exact</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 93px"></span></span>
+      93%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>doublon_quasi_evident</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 60px"></span></span>
+      60%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>doublon_quasi_incertain</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 87px"></span></span>
+      87%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>email_invalide</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 100px"></span></span>
+      100%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>livraison_avant_commande</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 100px"></span></span>
+      100%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>nombre_espace_virgule</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 100px"></span></span>
+      100%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>nombre_point_simple</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 100px"></span></span>
+      100%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>nombre_point_virgule_euro</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 100px"></span></span>
+      100%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>nombre_pourcentage</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 100px"></span></span>
+      100%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>quantite_ou_prix_invalide</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 100px"></span></span>
+      100%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>reference_inexistante</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 100px"></span></span>
+      100%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>siret_illisible</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 100px"></span></span>
+      100%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>siret_scientifique</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 95px"></span></span>
+      95%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>structure_banniere</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 100px"></span></span>
+      100%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>structure_colonne_inutile</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 100px"></span></span>
+      100%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>structure_entete_repete</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 100px"></span></span>
+      100%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>structure_ligne_total</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 100px"></span></span>
+      100%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>structure_ligne_vide</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 100px"></span></span>
+      100%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>telephone_format</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 100px"></span></span>
+      100%
+    </td>
+  </tr>
+  
+  <tr>
+    <td>valeur_numerique_invalide</td>
+    <td class="num">
+      <span class="barre-fond"><span class="barre" style="width: 100px"></span></span>
+      100%
+    </td>
+  </tr>
+  
+</table>
+
+<details>
+  <summary>12 écart(s) détaillé(s) (voir specs/00-vision.md pour le cas connu
+  des quasi-doublons incertains dont la ligne jumelle est quarantinée pour une autre raison)</summary>
+  <table>
+    <tr><th>Onglet</th><th>Ligne</th><th>Raison</th></tr>
+    
+    <tr><td>Clients</td><td>324</td><td>doublon non fusionné</td></tr>
+    
+    <tr><td>Clients</td><td>328</td><td>doublon non fusionné</td></tr>
+    
+    <tr><td>Clients</td><td>329</td><td>doublon non fusionné</td></tr>
+    
+    <tr><td>Clients</td><td>330</td><td>doublon non fusionné</td></tr>
+    
+    <tr><td>Clients</td><td>336</td><td>doublon non fusionné</td></tr>
+    
+    <tr><td>Clients</td><td>337</td><td>doublon non fusionné</td></tr>
+    
+    <tr><td>Clients</td><td>339</td><td>doublon non fusionné</td></tr>
+    
+    <tr><td>Clients</td><td>348</td><td>non corrigeable mais pas en quarantaine</td></tr>
+    
+    <tr><td>Clients</td><td>350</td><td>non corrigeable mais pas en quarantaine</td></tr>
+    
+    <tr><td>Clients</td><td>214</td><td>corrigeable mais en quarantaine (motifs=doublon_quasi_incertain)</td></tr>
+    
+    <tr><td>Clients</td><td>269</td><td>corrigeable mais en quarantaine (motifs=doublon_quasi_incertain)</td></tr>
+    
+    <tr><td>Clients</td><td>302</td><td>corrigeable mais en quarantaine (motifs=doublon_quasi_incertain)</td></tr>
+    
+  </table>
+</details>
+
+
+
+<h2>5. Résultat des tests dbt</h2>
+
+<p>
+  <span class="ok">
+    19/19 tests passés
+  </span>
+  sur 6 modèles (2026-10-14T08:07:19.834654Z).
+</p>
+
+
+
+<h2>6. Avant / après — extrait</h2>
+<p>Quelques lignes corrigées par le pipeline, valeur brute barrée à gauche,
+valeur propre à droite (cellules corrigées surlignées).</p>
+
+
+<h3>clients</h3>
+<table>
+  <tr>
+    <th>Ligne</th>
+    
+    <th>client_id</th>
+    
+    <th>code_client</th>
+    
+    <th>nom_entreprise</th>
+    
+    <th>contact_nom</th>
+    
+    <th>email</th>
+    
+    <th>telephone</th>
+    
+    <th>adresse</th>
+    
+    <th>code_postal</th>
+    
+    <th>ville</th>
+    
+    <th>region</th>
+    
+    <th>siret</th>
+    
+    <th>segment</th>
+    
+    <th>date_creation</th>
+    
+  </tr>
+  
+  <tr>
+    <td>7</td>
+    
+    <td class="">
+      
+        6
+      
+    </td>
+    
+    <td class="">
+      
+        CLI-0006
+      
+    </td>
+    
+    <td class="">
+      
+        Ledoux
+      
+    </td>
+    
+    <td class="">
+      
+        Richard Merle
+      
+    </td>
+    
+    <td class="">
+      
+        josephtristan@moreau.com
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        <span class="diff-avant">02.45.44.77.33</span><br>
+        <span class="diff-apres">02 45 44 77 33</span>
+      
+    </td>
+    
+    <td class="">
+      
+        13, boulevard Chevalier
+      
+    </td>
+    
+    <td class="">
+      
+        11849
+      
+    </td>
+    
+    <td class="">
+      
+        Muller-les-Bains
+      
+    </td>
+    
+    <td class="">
+      
+        Île-de-France
+      
+    </td>
+    
+    <td class="">
+      
+        78248963700168
+      
+    </td>
+    
+    <td class="">
+      
+        grand_compte
+      
+    </td>
+    
+    <td class="">
+      
+        2024-01-19T00:00:00
+      
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <td>14</td>
+    
+    <td class="">
+      
+        13
+      
+    </td>
+    
+    <td class="">
+      
+        CLI-0013
+      
+    </td>
+    
+    <td class="">
+      
+        Marie SA
+      
+    </td>
+    
+    <td class="">
+      
+        Richard Da Silva
+      
+    </td>
+    
+    <td class="">
+      
+        isabelle82@rodriguez.com
+      
+    </td>
+    
+    <td class="">
+      
+        01 29 04 40 51
+      
+    </td>
+    
+    <td class="">
+      
+        60, rue Martineau
+      
+    </td>
+    
+    <td class="">
+      
+        14462
+      
+    </td>
+    
+    <td class="">
+      
+        Cordier-les-Bains
+      
+    </td>
+    
+    <td class="">
+      
+        Grand Est
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        <span class="diff-avant">2.26026E+13</span><br>
+        <span class="diff-apres">22602600000000</span>
+      
+    </td>
+    
+    <td class="">
+      
+        pme
+      
+    </td>
+    
+    <td class="">
+      
+        2018-01-01T00:00:00
+      
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <td>15</td>
+    
+    <td class="">
+      
+        14
+      
+    </td>
+    
+    <td class="">
+      
+        CLI-0014
+      
+    </td>
+    
+    <td class="">
+      
+        Leroux
+      
+    </td>
+    
+    <td class="">
+      
+        Laurent Morel
+      
+    </td>
+    
+    <td class="">
+      
+        mlouis@marty.org
+      
+    </td>
+    
+    <td class="">
+      
+        06 27 83 63 50
+      
+    </td>
+    
+    <td class="">
+      
+        40, chemin Roger Muller
+      
+    </td>
+    
+    <td class="">
+      
+        97345
+      
+    </td>
+    
+    <td class="">
+      
+        Clerc
+      
+    </td>
+    
+    <td class="">
+      
+        Île-de-France
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        <span class="diff-avant">6.85014E+13</span><br>
+        <span class="diff-apres">68501400000000</span>
+      
+    </td>
+    
+    <td class="">
+      
+        pme
+      
+    </td>
+    
+    <td class="">
+      
+        2024-12-02T00:00:00
+      
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <td>28</td>
+    
+    <td class="">
+      
+        27
+      
+    </td>
+    
+    <td class="">
+      
+        CLI-0027
+      
+    </td>
+    
+    <td class="">
+      
+        Fernandes S.A.
+      
+    </td>
+    
+    <td class="">
+      
+        Madeleine-Aurélie Menard
+      
+    </td>
+    
+    <td class="">
+      
+        pascalpaulette@seguin.net
+      
+    </td>
+    
+    <td class="">
+      
+        07 85 83 47 56
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        <span class="diff-avant">null</span><br>
+        <span class="diff-apres">None</span>
+      
+    </td>
+    
+    <td class="">
+      
+        72735
+      
+    </td>
+    
+    <td class="">
+      
+        Saint Paulette
+      
+    </td>
+    
+    <td class="">
+      
+        Auvergne-Rhône-Alpes
+      
+    </td>
+    
+    <td class="">
+      
+        34123281700260
+      
+    </td>
+    
+    <td class="">
+      
+        detaillant
+      
+    </td>
+    
+    <td class="">
+      
+        2020-10-20T00:00:00
+      
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <td>33</td>
+    
+    <td class="">
+      
+        32
+      
+    </td>
+    
+    <td class="">
+      
+        CLI-0032
+      
+    </td>
+    
+    <td class="">
+      
+        Auger
+      
+    </td>
+    
+    <td class="">
+      
+        Pierre Munoz Le Legros
+      
+    </td>
+    
+    <td class="">
+      
+        pgeorges@courtois.com
+      
+    </td>
+    
+    <td class="">
+      
+        04 12 12 84 55
+      
+    </td>
+    
+    <td class="">
+      
+        99, rue de Muller
+      
+    </td>
+    
+    <td class="">
+      
+        35891
+      
+    </td>
+    
+    <td class="">
+      
+        Leblanc-la-Forêt
+      
+    </td>
+    
+    <td class="">
+      
+        Occitanie
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        <span class="diff-avant">4.49973E+13</span><br>
+        <span class="diff-apres">44997300000000</span>
+      
+    </td>
+    
+    <td class="">
+      
+        detaillant
+      
+    </td>
+    
+    <td class="">
+      
+        2018-12-22T00:00:00
+      
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <td>38</td>
+    
+    <td class="">
+      
+        37
+      
+    </td>
+    
+    <td class="">
+      
+        CLI-0037
+      
+    </td>
+    
+    <td class="">
+      
+        Legendre Deschamps et Fils
+      
+    </td>
+    
+    <td class="">
+      
+        Thomas Pereira
+      
+    </td>
+    
+    <td class="">
+      
+        ruizsimone@fontaine.fr
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        <span class="diff-avant">+33 70 72 14 80 0</span><br>
+        <span class="diff-apres">07 07 21 48 00</span>
+      
+    </td>
+    
+    <td class="">
+      
+        51, avenue Jérôme Bourgeois
+      
+    </td>
+    
+    <td class="">
+      
+        17905
+      
+    </td>
+    
+    <td class="">
+      
+        Poulain-la-Forêt
+      
+    </td>
+    
+    <td class="">
+      
+        Occitanie
+      
+    </td>
+    
+    <td class="">
+      
+        47451712500214
+      
+    </td>
+    
+    <td class="">
+      
+        pme
+      
+    </td>
+    
+    <td class="">
+      
+        2019-05-19T00:00:00
+      
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <td>39</td>
+    
+    <td class="">
+      
+        38
+      
+    </td>
+    
+    <td class="">
+      
+        CLI-0038
+      
+    </td>
+    
+    <td class="">
+      
+        Labbé Ramos et Fils
+      
+    </td>
+    
+    <td class="">
+      
+        Mathilde Robin
+      
+    </td>
+    
+    <td class="">
+      
+        qgarcia@de.org
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        <span class="diff-avant">09.36.54.89.93</span><br>
+        <span class="diff-apres">09 36 54 89 93</span>
+      
+    </td>
+    
+    <td class="">
+      
+        25, rue de Georges
+      
+    </td>
+    
+    <td class="">
+      
+        04734
+      
+    </td>
+    
+    <td class="">
+      
+        Millet-sur-Mer
+      
+    </td>
+    
+    <td class="">
+      
+        Nouvelle-Aquitaine
+      
+    </td>
+    
+    <td class="">
+      
+        17461200200827
+      
+    </td>
+    
+    <td class="">
+      
+        detaillant
+      
+    </td>
+    
+    <td class="">
+      
+        2023-10-14T00:00:00
+      
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <td>50</td>
+    
+    <td class="">
+      
+        49
+      
+    </td>
+    
+    <td class="">
+      
+        CLI-0049
+      
+    </td>
+    
+    <td class="">
+      
+        Benard S.A.S.
+      
+    </td>
+    
+    <td class="">
+      
+        Honoré Pinto
+      
+    </td>
+    
+    <td class="">
+      
+        dmorel@renault.com
+      
+    </td>
+    
+    <td class="">
+      
+        02 95 70 19 34
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        <span class="diff-avant">N/A</span><br>
+        <span class="diff-apres">None</span>
+      
+    </td>
+    
+    <td class="">
+      
+        94142
+      
+    </td>
+    
+    <td class="">
+      
+        Masse-sur-Mer
+      
+    </td>
+    
+    <td class="">
+      
+        Auvergne-Rhône-Alpes
+      
+    </td>
+    
+    <td class="">
+      
+        97820715700410
+      
+    </td>
+    
+    <td class="">
+      
+        pme
+      
+    </td>
+    
+    <td class="">
+      
+        2018-02-28T00:00:00
+      
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <td>51</td>
+    
+    <td class="">
+      
+        50
+      
+    </td>
+    
+    <td class="">
+      
+        CLI-0050
+      
+    </td>
+    
+    <td class="">
+      
+        Bodin et Fils
+      
+    </td>
+    
+    <td class="">
+      
+        Alphonse Hoarau
+      
+    </td>
+    
+    <td class="">
+      
+        hnavarro@marchal.fr
+      
+    </td>
+    
+    <td class="">
+      
+        06 26 87 81 33
+      
+    </td>
+    
+    <td class="">
+      
+        19, chemin de François
+      
+    </td>
+    
+    <td class="">
+      
+        42196
+      
+    </td>
+    
+    <td class="">
+      
+        Potiernec
+      
+    </td>
+    
+    <td class="">
+      
+        Hauts-de-France
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        <span class="diff-avant">4.92519E+13</span><br>
+        <span class="diff-apres">49251900000000</span>
+      
+    </td>
+    
+    <td class="">
+      
+        pme
+      
+    </td>
+    
+    <td class="">
+      
+        2020-09-01T00:00:00
+      
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <td>54</td>
+    
+    <td class="">
+      
+        53
+      
+    </td>
+    
+    <td class="">
+      
+        CLI-0053
+      
+    </td>
+    
+    <td class="">
+      
+        Renard
+      
+    </td>
+    
+    <td class="">
+      
+        Thibaut de la Deschamps
+      
+    </td>
+    
+    <td class="">
+      
+        clercchristine@lenoir.com
+      
+    </td>
+    
+    <td class="">
+      
+        01 14 09 88 19
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        <span class="diff-avant">null</span><br>
+        <span class="diff-apres">None</span>
+      
+    </td>
+    
+    <td class="">
+      
+        65250
+      
+    </td>
+    
+    <td class="">
+      
+        Robin-sur-Mer
+      
+    </td>
+    
+    <td class="">
+      
+        Hauts-de-France
+      
+    </td>
+    
+    <td class="">
+      
+        50606853500570
+      
+    </td>
+    
+    <td class="">
+      
+        detaillant
+      
+    </td>
+    
+    <td class="">
+      
+        2021-02-12T00:00:00
+      
+    </td>
+    
+  </tr>
+  
+</table>
+
+
+
+<h3>produits</h3>
+<table>
+  <tr>
+    <th>Ligne</th>
+    
+    <th>produit_id</th>
+    
+    <th>code_produit</th>
+    
+    <th>nom_produit</th>
+    
+    <th>categorie</th>
+    
+    <th>prix_unitaire</th>
+    
+    <th>unite</th>
+    
+    <th>fournisseur</th>
+    
+  </tr>
+  
+  <tr>
+    <td>4</td>
+    
+    <td class="">
+      
+        3
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        Art-0003
+      
+    </td>
+    
+    <td class="">
+      
+        Carton de bouteilles de soda 1L
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        BOISSONS
+      
+    </td>
+    
+    <td class="">
+      
+        34,1%
+      
+    </td>
+    
+    <td class="">
+      
+        palette
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        -
+      
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <td>7</td>
+    
+    <td class="">
+      
+        6
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        <span class="diff-avant">Art-0006</span><br>
+        <span class="diff-apres">ART-0006</span>
+      
+    </td>
+    
+    <td class="">
+      
+        Lot de bouchons d'oreille
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        <span class="diff-avant">PROTECTION</span><br>
+        <span class="diff-apres">protection</span>
+      
+    </td>
+    
+    <td class="">
+      
+        160.72
+      
+    </td>
+    
+    <td class="">
+      
+        carton
+      
+    </td>
+    
+    <td class="">
+      
+        None
+      
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <td>9</td>
+    
+    <td class="">
+      
+        8
+      
+    </td>
+    
+    <td class="">
+      
+        ART-0008
+      
+    </td>
+    
+    <td class="">
+      
+        Carton de rouleaux de papier toilette
+      
+    </td>
+    
+    <td class="">
+      
+        papier
+      
+    </td>
+    
+    <td class="">
+      
+        317.8
+      
+    </td>
+    
+    <td class="">
+      
+        palette
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        <span class="diff-avant">-</span><br>
+        <span class="diff-apres">None</span>
+      
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <td>10</td>
+    
+    <td class="">
+      
+        9
+      
+    </td>
+    
+    <td class="">
+      
+        ART-0009
+      
+    </td>
+    
+    <td class="">
+      
+        Lot de gilets de travail
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        <span class="diff-avant">TEXTILE</span><br>
+        <span class="diff-apres">textile</span>
+      
+    </td>
+    
+    <td class="">
+      
+        253.1
+      
+    </td>
+    
+    <td class="">
+      
+        carton
+      
+    </td>
+    
+    <td class="">
+      
+        Petit Logistique
+      
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <td>12</td>
+    
+    <td class="">
+      
+        11
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        <span class="diff-avant">art-0011</span><br>
+        <span class="diff-apres">ART-0011</span>
+      
+    </td>
+    
+    <td class="">
+      
+        Carton de lunettes de protection
+      
+    </td>
+    
+    <td class="">
+      
+        protection
+      
+    </td>
+    
+    <td class="">
+      
+        132.12
+      
+    </td>
+    
+    <td class="">
+      
+        carton
+      
+    </td>
+    
+    <td class="">
+      
+        Groupe Lefèvre
+      
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <td>16</td>
+    
+    <td class="">
+      
+        14
+      
+    </td>
+    
+    <td class="">
+      
+        ART-0014
+      
+    </td>
+    
+    <td class="">
+      
+        Palette de bouteilles d'eau 50cl
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        <span class="diff-avant">BOISSONS</span><br>
+        <span class="diff-apres">boissons</span>
+      
+    </td>
+    
+    <td class="">
+      
+        277.82
+      
+    </td>
+    
+    <td class="">
+      
+        boîte
+      
+    </td>
+    
+    <td class="">
+      
+        Bernard & Fils
+      
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <td>18</td>
+    
+    <td class="">
+      
+        16
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        <span class="diff-avant">Art-0016</span><br>
+        <span class="diff-apres">ART-0016</span>
+      
+    </td>
+    
+    <td class="">
+      
+        Carton de boîtes de conserve légumes
+      
+    </td>
+    
+    <td class="">
+      
+        alimentaire
+      
+    </td>
+    
+    <td class="">
+      
+        46.89
+      
+    </td>
+    
+    <td class="">
+      
+        carton
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        <span class="diff-avant">-</span><br>
+        <span class="diff-apres">None</span>
+      
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <td>23</td>
+    
+    <td class="">
+      
+        20
+      
+    </td>
+    
+    <td class="">
+      
+        ART-0020
+      
+    </td>
+    
+    <td class="">
+      
+        Lot de caisses plastique gerbables
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        <span class="diff-avant">ALIMENTAIRE</span><br>
+        <span class="diff-apres">alimentaire</span>
+      
+    </td>
+    
+    <td class="">
+      
+        332.93
+      
+    </td>
+    
+    <td class="">
+      
+        pièce
+      
+    </td>
+    
+    <td class="">
+      
+        Michel Distribution
+      
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <td>25</td>
+    
+    <td class="">
+      
+        22
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        <span class="diff-avant">Art-0022</span><br>
+        <span class="diff-apres">ART-0022</span>
+      
+    </td>
+    
+    <td class="">
+      
+        Carton de torchons coton
+      
+    </td>
+    
+    <td class="">
+      
+        textile
+      
+    </td>
+    
+    <td class="">
+      
+        421.6
+      
+    </td>
+    
+    <td class="">
+      
+        carton
+      
+    </td>
+    
+    <td class="">
+      
+        Dupont Industrie
+      
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <td>26</td>
+    
+    <td class="">
+      
+        23
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        <span class="diff-avant">Art-0023</span><br>
+        <span class="diff-apres">ART-0023</span>
+      
+    </td>
+    
+    <td class="">
+      
+        Lot de cartons d'emballage 60x40
+      
+    </td>
+    
+    <td class="">
+      
+        emballage
+      
+    </td>
+    
+    <td class="">
+      
+        256.45
+      
+    </td>
+    
+    <td class="">
+      
+        pièce
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        <span class="diff-avant">null</span><br>
+        <span class="diff-apres">None</span>
+      
+    </td>
+    
+  </tr>
+  
+</table>
+
+
+
+<h3>commandes</h3>
+<table>
+  <tr>
+    <th>Ligne</th>
+    
+    <th>commande_id</th>
+    
+    <th>client_id</th>
+    
+    <th>produit_id</th>
+    
+    <th>quantite</th>
+    
+    <th>prix_unitaire_commande</th>
+    
+    <th>date_commande</th>
+    
+    <th>date_livraison</th>
+    
+    <th>statut</th>
+    
+  </tr>
+  
+  <tr>
+    <td>44</td>
+    
+    <td class="">
+      
+        43
+      
+    </td>
+    
+    <td class="">
+      
+        201
+      
+    </td>
+    
+    <td class="">
+      
+        76
+      
+    </td>
+    
+    <td class="">
+      
+        62
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        124,17 €
+      
+    </td>
+    
+    <td class="">
+      
+        2025-02-25T00:00:00
+      
+    </td>
+    
+    <td class="">
+      
+        2025-03-10T00:00:00
+      
+    </td>
+    
+    <td class="">
+      
+        En cours
+      
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <td>55</td>
+    
+    <td class="">
+      
+        54
+      
+    </td>
+    
+    <td class="">
+      
+        29
+      
+    </td>
+    
+    <td class="">
+      
+        N/A
+      
+    </td>
+    
+    <td class="">
+      
+        36
+      
+    </td>
+    
+    <td class="">
+      
+        215.91
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        29 juin 2025
+      
+    </td>
+    
+    <td class="">
+      
+        2025-07-01T00:00:00
+      
+    </td>
+    
+    <td class="">
+      
+        Livrée
+      
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <td>64</td>
+    
+    <td class="">
+      
+        63
+      
+    </td>
+    
+    <td class="">
+      
+        164
+      
+    </td>
+    
+    <td class="">
+      
+        70
+      
+    </td>
+    
+    <td class="">
+      
+        173
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        43,42
+      
+    </td>
+    
+    <td class="">
+      
+        2026-08-09T00:00:00
+      
+    </td>
+    
+    <td class="">
+      
+        2026-08-15T00:00:00
+      
+    </td>
+    
+    <td class="">
+      
+        Livrée
+      
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <td>127</td>
+    
+    <td class="">
+      
+        126
+      
+    </td>
+    
+    <td class="">
+      
+        229
+      
+    </td>
+    
+    <td class="">
+      
+        12
+      
+    </td>
+    
+    <td class="">
+      
+        69
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        <span class="diff-avant">295,88 €</span><br>
+        <span class="diff-apres">295.88</span>
+      
+    </td>
+    
+    <td class="">
+      
+        2026-03-27T00:00:00
+      
+    </td>
+    
+    <td class="">
+      
+        2026-04-04T00:00:00
+      
+    </td>
+    
+    <td class="">
+      
+        Livrée
+      
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <td>183</td>
+    
+    <td class="">
+      
+        182
+      
+    </td>
+    
+    <td class="">
+      
+        259
+      
+    </td>
+    
+    <td class="">
+      
+        44
+      
+    </td>
+    
+    <td class="">
+      
+        10
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        <span class="diff-avant">188,11</span><br>
+        <span class="diff-apres">188.11</span>
+      
+    </td>
+    
+    <td class="">
+      
+        2026-01-11T00:00:00
+      
+    </td>
+    
+    <td class="">
+      
+        2026-01-23T00:00:00
+      
+    </td>
+    
+    <td class="">
+      
+        Livrée
+      
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <td>194</td>
+    
+    <td class="">
+      
+        193
+      
+    </td>
+    
+    <td class="">
+      
+        234
+      
+    </td>
+    
+    <td class="">
+      
+        76
+      
+    </td>
+    
+    <td class="">
+      
+        null
+      
+    </td>
+    
+    <td class="">
+      
+        146.08
+      
+    </td>
+    
+    <td class="">
+      
+        2026-04-21T00:00:00
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        46134
+      
+    </td>
+    
+    <td class="">
+      
+        Livrée
+      
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <td>197</td>
+    
+    <td class="">
+      
+        196
+      
+    </td>
+    
+    <td class="">
+      
+        138
+      
+    </td>
+    
+    <td class="">
+      
+        24
+      
+    </td>
+    
+    <td class="">
+      
+        103
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        445,12
+      
+    </td>
+    
+    <td class="">
+      
+        2025-12-17T00:00:00
+      
+    </td>
+    
+    <td class="">
+      
+        2025-12-20T00:00:00
+      
+    </td>
+    
+    <td class="">
+      
+        Livrée
+      
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <td>250</td>
+    
+    <td class="">
+      
+        249
+      
+    </td>
+    
+    <td class="">
+      
+        99
+      
+    </td>
+    
+    <td class="">
+      
+        1025
+      
+    </td>
+    
+    <td class="">
+      
+        198
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        223,82
+      
+    </td>
+    
+    <td class="">
+      
+        2025-03-26T00:00:00
+      
+    </td>
+    
+    <td class="">
+      
+        2025-03-28
+      
+    </td>
+    
+    <td class="">
+      
+        Livrée
+      
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <td>292</td>
+    
+    <td class="">
+      
+        291
+      
+    </td>
+    
+    <td class="">
+      
+        12
+      
+    </td>
+    
+    <td class="">
+      
+        63
+      
+    </td>
+    
+    <td class="">
+      
+        35
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        <span class="diff-avant">125,27 €</span><br>
+        <span class="diff-apres">125.27</span>
+      
+    </td>
+    
+    <td class="">
+      
+        2025-05-11T00:00:00
+      
+    </td>
+    
+    <td class="">
+      
+        2025-05-21T00:00:00
+      
+    </td>
+    
+    <td class="">
+      
+        Livrée
+      
+    </td>
+    
+  </tr>
+  
+  <tr>
+    <td>345</td>
+    
+    <td class="">
+      
+        344
+      
+    </td>
+    
+    <td class="">
+      
+        216
+      
+    </td>
+    
+    <td class="">
+      
+        128
+      
+    </td>
+    
+    <td class="">
+      
+        125
+      
+    </td>
+    
+    <td class="">
+      
+        352.32
+      
+    </td>
+    
+    <td class="cell-corrigee">
+      
+        <span class="diff-avant">14 juin 2026</span><br>
+        <span class="diff-apres">2026-06-14</span>
+      
+    </td>
+    
+    <td class="">
+      
+        2026-06-23T00:00:00
+      
+    </td>
+    
+    <td class="">
+      
+        Livrée
+      
+    </td>
+    
+  </tr>
+  
+</table>
+
+
+
+<footer>
+  Généré automatiquement par <code>pipeline/report.py</code> — voir
+  <code>specs/05-report.md</code>. Aucun bénéfice chiffré présenté ici n'est un
+  résultat mesuré en production réelle : ce projet est une démonstration de
+  méthode sur données fictives.
+</footer>
+
+</body>
+</html>

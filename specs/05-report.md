@@ -1,6 +1,6 @@
 # 05 — Rapport qualité et avant/après
 
-**Statut : Approved**
+**Statut : Implemented**
 
 ## Objectif
 
@@ -49,12 +49,12 @@ résumé Markdown copié dans le README — décision prise en
 
 ## Critères de réussite
 
-- [ ] Le rapport s'ouvre comme fichier HTML autonome (aucune dépendance
+- [x] Le rapport s'ouvre comme fichier HTML autonome (aucune dépendance
   réseau), lisible sans contexte technique.
-- [ ] La réconciliation des volumes est exacte à chaque exécution (0 ligne
+- [x] La réconciliation des volumes est exacte à chaque exécution (0 ligne
   perdue).
-- [ ] Le taux de correction mesuré contre la vérité terrain est affiché et
-  comparé explicitement au seuil de 95 %.
-- [ ] L'avant/après sur 8-10 lignes se comprend en moins de 10 secondes par
+- [x] Le taux de correction mesuré contre la vérité terrain est affiché et
+  comparé explicitement au seuil de 95 % (98,1 % mesuré).
+- [x] L'avant/après sur 8-10 lignes se comprend en moins de 10 secondes par
   quelqu'un qui ne connaît pas la data (vérifié visuellement par l'auteur
   avant capture).
