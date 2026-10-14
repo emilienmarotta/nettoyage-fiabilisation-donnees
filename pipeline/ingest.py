@@ -15,7 +15,7 @@ from openpyxl import load_workbook
 
 from pipeline.db import get_connection
 from pipeline.schema import COLONNE_INUTILE_LABEL, TABLES
-from pipeline.structure import est_entete_repete, est_ligne_total, est_ligne_vide
+from pipeline.structure import est_banniere, est_entete_repete, est_ligne_total, est_ligne_vide
 
 DDL = """
 CREATE SCHEMA IF NOT EXISTS raw;
@@ -98,6 +98,12 @@ def _lire_feuille(ws, nom_feuille: str) -> tuple[list[dict], list[dict]]:
         if est_ligne_vide(valeurs_texte):
             lignes_structure.append({
                 "ligne_origine": excel_row, "raison": "ligne_vide",
+                "contenu_brut": valeurs_texte,
+            })
+            continue
+        if est_banniere(valeurs_texte):
+            lignes_structure.append({
+                "ligne_origine": excel_row, "raison": "banniere",
                 "contenu_brut": valeurs_texte,
             })
             continue

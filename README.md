@@ -38,7 +38,8 @@ pip install -r requirements.txt
 docker compose up -d
 make generate   # génère data/clients_commandes_brut.xlsx + vérité terrain
 make ingest     # charge le classeur tel quel dans le schéma raw Postgres
-make run        # ingestion → nettoyage → dbt build → rapport qualité (à venir)
+make clean      # nettoie raw.* vers clean_staging.* (corrections + quarantaine)
+make run        # + dbt build + rapport qualité (à venir)
 ```
 
 Le générateur (`make generate`) produit, de façon déterministe (graine
@@ -54,9 +55,19 @@ L'ingestion (`make ingest`) lit ce classeur onglet par onglet, charge
 chaque ligne telle quelle (tout en texte, sans conversion de type) dans
 `raw.raw_clients` / `raw.raw_produits` / `raw.raw_commandes`, et écarte
 proprement les lignes de structure (total, en-tête répété, ligne vide,
-colonne inutile) dans `raw.structure_ecartee` avec la raison — rejouable
-sans dupliquer (idempotent par fichier source). Détail :
+bannière, colonne inutile) dans `raw.structure_ecartee` avec la raison —
+rejouable sans dupliquer (idempotent par fichier source). Détail :
 [specs/02-ingestion.md](specs/02-ingestion.md).
+
+Le nettoyage (`make clean`) relit `raw.*`, applique la charte de règles
+(parsing de dates/nombres/identifiants multi-formats, normalisation de
+texte et de contacts, rapprochement de quasi-doublons clients) et écrit
+chaque ligne soit dans `clean_staging.{clients,produits,commandes}`, soit
+dans `clean_staging.quarantine` avec un motif — jamais les deux, jamais
+perdue en silence. Chaque correction appliquée est tracée dans
+`clean_staging.correction_log` (valeur avant/après, règle appliquée).
+Rejouable sans dupliquer. Détail :
+[specs/03-cleaning.md](specs/03-cleaning.md).
 
 Détails complets à venir au fil des milestones (voir
 [specs/07-deliverables.md](specs/07-deliverables.md)).

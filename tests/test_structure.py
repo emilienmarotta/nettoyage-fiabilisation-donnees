@@ -1,7 +1,7 @@
 """Vérifie les règles de détection des lignes de structure de
 specs/02-ingestion.md (pures, sans base de données)."""
 
-from pipeline.structure import est_entete_repete, est_ligne_total, est_ligne_vide
+from pipeline.structure import est_banniere, est_entete_repete, est_ligne_total, est_ligne_vide
 
 LABELS = ["ID Client", "Nom Entreprise", "Ville"]
 
@@ -37,3 +37,15 @@ def test_entete_repete_mauvaise_longueur():
 
 def test_ligne_de_donnees_pas_un_entete():
     assert not est_entete_repete(["1", "Leblanc", "Paris"], LABELS)
+
+
+def test_banniere_detectee():
+    assert est_banniere(["--- Export mensuel - Service commercial ---", None, None])
+
+
+def test_ligne_normale_pas_une_banniere():
+    assert not est_banniere(["1", "Leblanc", "Paris"])
+
+
+def test_ligne_vide_pas_une_banniere():
+    assert not est_banniere([None, None, None])

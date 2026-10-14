@@ -27,7 +27,8 @@ rejouer l'ingestion de façon idempotente (voir ci-dessous).
 
 `raw.structure_ecartee` : `source_fichier`, `source_onglet`, `ligne_origine`,
 `contenu_brut` (JSON ou texte de la ligne complète), `raison`
-(`ligne_total` / `en_tete_repete` / `ligne_vide` / `colonne_inutile`).
+(`ligne_total` / `en_tete_repete` / `ligne_vide` / `banniere` /
+`colonne_inutile`).
 
 ## Détection des lignes de structure
 
@@ -40,6 +41,9 @@ rejouer l'ingestion de façon idempotente (voir ci-dessous).
   après normalisation casse/espaces) aux noms de colonnes attendus, à une
   position ≠ ligne 1.
 - **Ligne vide** : toutes les cellules vides/espaces.
+- **Bannière (cellule fusionnée)** : seule la première colonne porte une
+  valeur (le reste de la cellule fusionnée est lu vide par openpyxl) et
+  cette valeur commence par le marqueur explicite `---`.
 - **Colonne inutile** : colonne présente dans le fichier mais absente du
   schéma attendu — ignorée et journalisée une fois par onglet (pas par
   ligne).

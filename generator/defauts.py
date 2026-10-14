@@ -88,7 +88,7 @@ def _format_nombre(valeur: float, style: str) -> str:
         entier_espace = f"{int(entier):,}".replace(",", " ")
         return f"{entier_espace},{decimales}"
     if style == "point_simple":
-        return f"{valeur:.1f}"
+        return f"{valeur:.2f}"
     if style == "point_virgule_euro":
         entier_point = f"{int(entier):,}".replace(",", ".")
         return f"{entier_point},{decimales} €"

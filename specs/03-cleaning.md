@@ -1,6 +1,6 @@
 # 03 — Nettoyage Python, journal des corrections, quarantaine
 
-**Statut : Approved**
+**Statut : Implemented**
 
 ## Objectif
 
@@ -61,10 +61,16 @@ tous les motifs séparés par `;`.
    part en quarantaine (la ligne entière, pas seulement la colonne).
 3. Détection des doublons/quasi-doublons sur les lignes restantes
    (clients uniquement — les produits et commandes n'ont pas de notion de
-   quasi-doublon dans ce projet).
+   quasi-doublon dans ce projet). Chaque fusion (doublon exact ou
+   quasi-doublon évident) produit une correspondance `client_id` d'origine →
+   `client_id` canonique conservé, tracée dans `correction_log`.
 4. Vérification des références (commande → client/produit existant dans les
-   données déjà validées) : rupture → quarantaine motif
-   `reference_inexistante`.
+   données déjà validées) : une commande référençant un `client_id` fusionné
+   à l'étape 3 est **remappée** vers le `client_id` canonique (et la
+   correction journalisée) avant comparaison — une fusion de doublon ne doit
+   jamais transformer des commandes valides en références rompues. Rupture
+   réelle (identifiant absent même après remappage, ou renvoyant vers une
+   ligne en quarantaine) → quarantaine motif `reference_inexistante`.
 5. Écriture des lignes survivantes dans des tables intermédiaires
    `clean_staging.clients`, `.produits`, `.commandes` (schéma dédié, lu
    ensuite par dbt comme source) + écriture complète de `correction_log` et
@@ -79,11 +85,11 @@ régénérées pour le fichier source traité.
 
 ## Critères de réussite
 
-- [ ] Une fonction testée par règle du catalogue, cas normaux et cas limites
+- [x] Une fonction testée par règle du catalogue, cas normaux et cas limites
   (tests unitaires `tests/test_clean_*.py`).
-- [ ] 100 % des lignes `raw_*` finissent soit en staging propre, soit en
+- [x] 100 % des lignes `raw_*` finissent soit en staging propre, soit en
   quarantaine (réconciliation vérifiée).
-- [ ] `correction_log` permet de retrouver, pour n'importe quelle correction,
+- [x] `correction_log` permet de retrouver, pour n'importe quelle correction,
   la valeur brute d'origine et la règle appliquée.
-- [ ] Rejouer le nettoyage sur le même `raw_*` donne un résultat identique
+- [x] Rejouer le nettoyage sur le même `raw_*` donne un résultat identique
   (test d'idempotence).
